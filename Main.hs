@@ -40,11 +40,12 @@ instance Show InputLine where
 
 
 main :: IO ()
-main = do [file, probStr] <- getArgs
+main = do [file, probStr, outFile] <- getArgs
           let prob = read probStr
           fileData <- readFile file
           gen <- getStdGen
-          (print . squishList prob gen . inputsRead) fileData
+          let newData = (concat . intersperse "\n" . map show . squishList prob gen . inputsRead) fileData
+          writeFile outFile newData
 
 -- | Read an entire dataset from http://pssp.srv.ualberta.ca/
 inputsRead :: String -> [InputLine]
