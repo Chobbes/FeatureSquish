@@ -21,14 +21,15 @@
    SOFTWARE.
 -}
 
-import System.Environment
 import Data.List.Split
+import System.Environment
 
-data InputLine = InputLine {time :: Double
-                           ,censored :: Bool
-                           ,features :: [(Integer, Double)]
+-- | Type for PSSP data from http://pssp.srv.ualberta.ca/.
+data InputLine = InputLine { time :: Double  -- ^ Time of event, or censoring.
+                           , censored :: Bool  -- ^ True if censored, False otherwise.
+                           , features :: [(Integer, Double)]  -- ^ (Feature, Value).
                            }
-                           
+
 instance Show InputLine where
   show inp = t ++ " " ++ " " ++ c ++ f
        where t = show $ time inp
