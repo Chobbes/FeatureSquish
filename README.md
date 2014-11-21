@@ -20,9 +20,11 @@ Usage
 
 Given a dataset you call the program as follows
 
-    FeatureSquish dataset prob_of_removal out_file
+    FeatureSquish dataset output_directory iterations prob_of_removal+
 
 Where `dataset` is the filename of the data, `prob_of_removal` is the
 probability that any feature will be removed from the dataset, and
-`out_file` is where `FeatureSquish` should write the new dataset with
-missing features to.
+`output_directory` is where `FeatureSquish` should write the new
+datasets with missing features to. `iterations` is the number of
+datasets to generate with each probability of removal. Multiple
+probabilities of removal may be specified.
