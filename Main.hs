@@ -38,14 +38,14 @@ instance Show InputLine where
              c = if censored inp then "1" else "0"
              f = unwords . map (\(f,v) -> show f ++ ":" ++ show v) $ features inp
 
-
-main :: IO ()
-main = do [file, probStr, outFile] <- getArgs
-          let prob = read probStr
-          fileData <- readFile file
-          gen <- getStdGen
-          let newData = (intercalate "\n" . map show . squishList prob gen . inputsRead) fileData
-          writeFile outFile newData
+-- | FeatureSquish dataset output_directory iterations prob_of_removal+
+-- main :: IO ()
+-- main = do (file : outDir : iterations : probStrs) <- getArgs
+--           let probs = map read probStr
+--           fileData <- readFile file
+--           gen <- getStdGen
+--           let newData = (intercalate "\n" . map show . squishList prob gen . inputsRead) fileData
+--           writeFile outFile newData
 
 -- | Read an entire dataset from http://pssp.srv.ualberta.ca/
 inputsRead :: String -> [InputLine]
@@ -58,10 +58,14 @@ lineRead str = InputLine (read t) (read c /= 0) features
                features = map readFeature featureStrs
                readFeature f = (read number, read value)
                  where [number, value] = splitOn ":" f
+                 
+-- | Generate several squished versions of the data.
+squishMultiple :: RandomGen g => Integer -> Double -> g -> [InputLine] -> [[InputLine]]
+squishMultiple iterations prob gen inp = map (squishList inp prob) (splits gen)
 
 -- | Remove features with a given probability from an InputLine list.
-squishList :: RandomGen g => Double -> g -> [InputLine] -> [InputLine]
-squishList prob gen = zipWith (squish prob) (splits gen)
+squishList :: RandomGen g => [InputLine] -> Double -> g -> [InputLine]
+squishList inp prob gen = zipWith (squish prob) (splits gen) inp
 
 -- | Remove features with a given probability from an InputLine.
 squish :: RandomGen g => Double -> g -> InputLine -> InputLine
