@@ -72,8 +72,8 @@ writeIteration :: FilePath -> String -> String -> (Integer, (Double, [InputLine]
 writeIteration outDir baseName extension (iter, (prob, inp)) = 
   do createDirectoryIfMissing True probDir
      writeFile iterFile (intercalate "\n" $ map show inp)
-  where probDir = outDir ++ "/" ++ (show prob) ++ "/"
-        iterFile = probDir ++ baseName ++ "_" ++ (show iter)
+  where probDir = joinPath [outDir, show prob]
+        iterFile = joinPath [probDir, baseName ++ "_" ++ (show iter) ++ extension]
 
 -- | Read an entire dataset from http://pssp.srv.ualberta.ca/
 inputsRead :: String -> [InputLine]
