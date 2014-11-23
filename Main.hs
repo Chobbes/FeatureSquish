@@ -23,7 +23,9 @@
 
 import Data.List
 import Data.List.Split hiding (split)
+import System.Directory
 import System.Environment
+import System.FilePath
 import System.Random
 
 -- | Type for PSSP data from http://pssp.srv.ualberta.ca/.
@@ -39,13 +41,39 @@ instance Show InputLine where
              f = unwords . map (\(f,v) -> show f ++ ":" ++ show v) $ features inp
 
 -- | FeatureSquish dataset output_directory iterations prob_of_removal+
--- main :: IO ()
--- main = do (file : outDir : iterations : probStrs) <- getArgs
---           let probs = map read probStr
---           fileData <- readFile file
---           gen <- getStdGen
---           let newData = (intercalate "\n" . map show . squishList prob gen . inputsRead) fileData
---           writeFile outFile newData
+main :: IO ()
+main = do (file : outDir : iterStr : probStrs) <- getArgs
+
+          let iterations = read iterStr
+          let probs = map read probStrs
+
+          let fileName = takeFileName file
+          let baseName = dropExtensions fileName
+          let extension = takeExtensions fileName
+
+          fileData <- readFile file
+          let inp = inputsRead fileData
+
+          gen <- getStdGen
+
+          putStrLn "Writing files..."
+          createDirectoryIfMissing True outDir
+          mapM (writeRun outDir baseName extension) $ map (\(p,g) -> (p, squishMultiple iterations inp p g)) (zip probs (splits gen))
+          putStrLn "Done!"
+
+
+-- | Write all iterations for a given probability to a file
+writeRun :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
+writeRun outDir baseName extension (prob, inps) = 
+  mapM (writeIteration outDir baseName extension) (zip [1..] (zip (repeat prob) inps))
+
+-- | Write a single iteration to a file.
+writeIteration :: FilePath -> String -> String -> (Integer, (Double, [InputLine])) -> IO ()
+writeIteration outDir baseName extension (iter, (prob, inp)) = 
+  do createDirectoryIfMissing True probDir
+     writeFile iterFile (intercalate "\n" $ map show inp)
+  where probDir = outDir ++ "/" ++ (show prob) ++ "/"
+        iterFile = probDir ++ baseName ++ "_" ++ (show iter)
 
 -- | Read an entire dataset from http://pssp.srv.ualberta.ca/
 inputsRead :: String -> [InputLine]
@@ -60,8 +88,8 @@ lineRead str = InputLine (read t) (read c /= 0) features
                  where [number, value] = splitOn ":" f
                  
 -- | Generate several squished versions of the data.
-squishMultiple :: RandomGen g => Integer -> Double -> g -> [InputLine] -> [[InputLine]]
-squishMultiple iterations prob gen inp = map (squishList inp prob) (splits gen)
+squishMultiple :: RandomGen g => Int -> [InputLine] -> Double -> g -> [[InputLine]]
+squishMultiple iterations inp prob gen = take iterations $ map (squishList inp prob) (splits gen)
 
 -- | Remove features with a given probability from an InputLine list.
 squishList :: RandomGen g => [InputLine] -> Double -> g -> [InputLine]
