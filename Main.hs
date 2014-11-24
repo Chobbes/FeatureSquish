@@ -23,6 +23,7 @@
 
 import Data.List
 import Data.List.Split hiding (split)
+import Data.Maybe
 import System.Directory
 import System.Environment
 import System.FilePath
@@ -60,6 +61,15 @@ main = do (file : outDir : iterStr : probStrs) <- getArgs
           createDirectoryIfMissing True outDir
           mapM_ (writeRun outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
           putStrLn "Done!"
+
+
+-- | Convert an InputLine to CSV given a list of Integer features.
+toCSV :: [Integer] -> InputLine -> String
+toCSV featureList inp = intercalate ", " (featureStrings)
+  where featureStrings = map (maybeShow . (flip lookup) (features inp)) featureList
+        maybeShow m = if isNothing m
+                         then ""
+                         else show (fromJust m)
 
 
 -- | Write all iterations for a given probability to a file
