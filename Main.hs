@@ -76,7 +76,7 @@ inputLineToCSV featureList inp = intercalate ", " (t : c : featureStrings)
   where t = show $ time inp
         c = if censored inp then "1" else "0"
         featureStrings = map (maybeShow . flip lookup (features inp)) featureList
-        maybeShow = maybe "" show
+        maybeShow = maybe " " show
 
 -- | Write all iterations for a given probability to a file
 writeRun :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
