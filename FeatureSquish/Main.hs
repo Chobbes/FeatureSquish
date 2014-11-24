@@ -85,18 +85,6 @@ writeIterationCSV outDir baseName extension (iter, (prob, inp)) =
      writeFile iterFile (linesToCSV inp)
   where probDir = joinPath [outDir, show prob]
         iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
-
--- | Read an entire dataset from http://pssp.srv.ualberta.ca/
-inputsRead :: String -> [InputLine]
-inputsRead = map lineRead . lines
-
--- | Read a single line from the http://pssp.srv.ualberta.ca/ dataset.
-lineRead :: String -> InputLine
-lineRead str = InputLine (read t) (read c /= 0) features
-         where (t:c:featureStrs) = words str
-               features = map readFeature featureStrs
-               readFeature f = (read number, read value)
-                 where [number, value] = splitOn ":" f
                  
 -- | Generate several squished versions of the data.
 squishMultiple :: RandomGen g => Int -> [InputLine] -> Double -> g -> [[InputLine]]
