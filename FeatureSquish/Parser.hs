@@ -38,41 +38,44 @@ parsePSSP = parseCSV <|> parseMTLR
 
 -- | Parse a file of MTLR data.
 parseMTLR :: Parser [InputLine]
-parseMTLR = do inps <- many parseMTLR_Line
+parseMTLR = do inps <- many parseMTLRLine
                endOfInput
                return inps
 
 -- | Parse a single line of MTLR data.
-parseMTLR_Line :: Parser InputLine
-parseMTLR_Line = do time <- double
-                    skipSpace
-                    censored <- decimal
-                    skipSpace
-                    features <- many parseMTLR_Feature
-                    endOfLine
-                    return (InputLine time (censored /= 0) features)
+parseMTLRLine :: Parser InputLine
+parseMTLRLine = do time <- double
+                   skipSpace
+                   censored <- decimal
+                   skipSpace
+                   features <- many parseMTLRFeature
+                   endOfLine
+                   return (InputLine time (censored /= 0) features)
 
 -- | Parse a single feature:value pair for MTLR.
-parseMTLR_Feature :: Parser (Integer, Double)
-parseMTLR_Feature = do skipSpace
-                       feature <- decimal
-                       char ':'
-                       value <- double
-                       return (feature, value)
+parseMTLRFeature :: Parser (Integer, Double)
+parseMTLRFeature = do skipSpace
+                      feature <- decimal
+                      char ':'
+                      value <- double
+                      return (feature, value)
 
+-- | Parse a CSV file of data.
 parseCSV :: Parser [InputLine]
-parseCSV = do inps <- many parseCSV_Line
+parseCSV = do inps <- many parseCSVLine
               endOfInput
               return inps
 
-parseCSV_Line :: Parser InputLine
-parseCSV_Line = do event <- double
-                   char ','
-                   censored <- decimal
-                   features <- many parseCSV_Feature
-                   endOfLine
-                   return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
+-- | Parse a single line of CSV data.
+parseCSVLine :: Parser InputLine
+parseCSVLine = do event <- double
+                  char ','
+                  censored <- decimal
+                  features <- many parseCSVFeature
+                  endOfLine
+                  return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
 
-parseCSV_Feature :: Parser (Maybe Double)
-parseCSV_Feature = do char ','
-                      do value <- double; return (Just value) <|> do takeWhile1 (\c -> c /= ','); return Nothing
+-- | Parse a single feature from CSV data.
+parseCSVFeature :: Parser (Maybe Double)
+parseCSVFeature = do char ','
+                     do value <- double; return (Just value) <|> do takeWhile1 (/= ','); return Nothing
