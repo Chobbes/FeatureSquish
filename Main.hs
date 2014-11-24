@@ -58,7 +58,7 @@ main = do (file : outDir : iterStr : probStrs) <- getArgs
 
           putStrLn "Writing files..."
           createDirectoryIfMissing True outDir
-          mapM (writeRun outDir baseName extension) $ map (\(p,g) -> (p, squishMultiple iterations inp p g)) (zip probs (splits gen))
+          mapM_ (writeRun outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
           putStrLn "Done!"
 
 
@@ -73,7 +73,7 @@ writeIteration outDir baseName extension (iter, (prob, inp)) =
   do createDirectoryIfMissing True probDir
      writeFile iterFile (intercalate "\n" $ map show inp)
   where probDir = joinPath [outDir, show prob]
-        iterFile = joinPath [probDir, baseName ++ "_" ++ (show iter) ++ extension]
+        iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
 
 -- | Read an entire dataset from http://pssp.srv.ualberta.ca/
 inputsRead :: String -> [InputLine]
