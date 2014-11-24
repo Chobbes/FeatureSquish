@@ -43,7 +43,7 @@ instance Show InputLine where
 
 -- | FeatureSquish dataset output_directory iterations prob_of_removal+
 main :: IO ()
-main = do (file : outDir : iterStr : probStrs) <- getArgs
+main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
 
           let iterations = read iterStr
           let probs = map read probStrs
@@ -60,10 +60,8 @@ main = do (file : outDir : iterStr : probStrs) <- getArgs
           putStrLn "Writing files..."
           createDirectoryIfMissing True outDir
           mapM_ (writeRun outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
+          mapM_ (writeRunCSV outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
           putStrLn "Done!"
-
-
-
 
 -- | Convert an InputLine to a CSV representation.
 linesToCSV :: [InputLine] -> String
@@ -80,17 +78,29 @@ inputLineToCSV featureList inp = intercalate ", " (t : c : featureStrings)
         featureStrings = map (maybeShow . flip lookup (features inp)) featureList
         maybeShow = maybe "" show
 
-
 -- | Write all iterations for a given probability to a file
 writeRun :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
 writeRun outDir baseName extension (prob, inps) = 
   mapM (writeIteration outDir baseName extension) (zip [1..] (zip (repeat prob) inps))
+
+-- | Write all iterations for a given probability to a CSV file
+writeRunCSV :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
+writeRunCSV outDir baseName extension (prob, inps) = 
+  mapM (writeIterationCSV outDir baseName extension) (zip [1..] (zip (repeat prob) inps))
 
 -- | Write a single iteration to a file.
 writeIteration :: FilePath -> String -> String -> (Integer, (Double, [InputLine])) -> IO ()
 writeIteration outDir baseName extension (iter, (prob, inp)) = 
   do createDirectoryIfMissing True probDir
      writeFile iterFile (intercalate "\n" $ map show inp)
+  where probDir = joinPath [outDir, show prob]
+        iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
+
+-- | Write a single iteration to a CSV file.
+writeIterationCSV :: FilePath -> String -> String -> (Integer, (Double, [InputLine])) -> IO ()
+writeIterationCSV outDir baseName extension (iter, (prob, inp)) = 
+  do createDirectoryIfMissing True probDir
+     writeFile iterFile (linesToCSV inp)
   where probDir = joinPath [outDir, show prob]
         iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
 
