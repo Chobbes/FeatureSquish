@@ -63,11 +63,14 @@ main = do (file : outDir : iterStr : probStrs) <- getArgs
           putStrLn "Done!"
 
 
--- | Convert an InputLine to a CSV representation given a list of Integer features.
-linesToCSV :: [Integer] -> [InputLine] -> String
-linesToCSV featureList inps = intercalate "\n" (header : inputsCSV)
+
+
+-- | Convert an InputLine to a CSV representation.
+linesToCSV :: [InputLine] -> String
+linesToCSV inps = intercalate "\n" (header : inputsCSV)
   where header = "Time, Censored, " ++ intercalate ", " (map show featureList)
         inputsCSV = map (inputLineToCSV featureList) inps
+        featureList = nub $ concatMap (map fst . features) inps
 
 -- | Convert an InputLine to CSV given a list of Integer features.
 inputLineToCSV :: [Integer] -> InputLine -> String
@@ -75,7 +78,7 @@ inputLineToCSV featureList inp = intercalate ", " (t : c : featureStrings)
   where t = show $ time inp
         c = if censored inp then "1" else "0"
         featureStrings = map (maybeShow . flip lookup (features inp)) featureList
-        maybeShow m = maybe "" show m
+        maybeShow = maybe "" show
 
 
 -- | Write all iterations for a given probability to a file
