@@ -17,7 +17,7 @@ extra-source-files:  README.md
 cabal-version:       >=1.10
 
 executable FeatureSquish
-  main-is:             Main.hs
+  main-is:             FeatureSquish/Main.hs
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.7 && <4.8, split, random, directory >=1.2, filepath >=1.3
