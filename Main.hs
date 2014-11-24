@@ -63,10 +63,18 @@ main = do (file : outDir : iterStr : probStrs) <- getArgs
           putStrLn "Done!"
 
 
+-- | Convert an InputLine to a CSV representation given a list of Integer features.
+linesToCSV :: [Integer] -> [InputLine] -> String
+linesToCSV featureList inps = intercalate "\n" (header : inputsCSV)
+  where header = "Time, Censored, " ++ intercalate ", " (map show featureList)
+        inputsCSV = map (inputLineToCSV featureList) inps
+
 -- | Convert an InputLine to CSV given a list of Integer features.
-toCSV :: [Integer] -> InputLine -> String
-toCSV featureList inp = intercalate ", " (featureStrings)
-  where featureStrings = map (maybeShow . (flip lookup) (features inp)) featureList
+inputLineToCSV :: [Integer] -> InputLine -> String
+inputLineToCSV featureList inp = intercalate ", " (t : c : featureStrings)
+  where t = show $ time inp
+        c = if censored inp then "1" else "0"
+        featureStrings = map (maybeShow . (flip lookup) (features inp)) featureList
         maybeShow m = if isNothing m
                          then ""
                          else show (fromJust m)
