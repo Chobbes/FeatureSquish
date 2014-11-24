@@ -22,10 +22,14 @@
 -}
 
 import FeatureSquish.InputLine
+import FeatureSquish.Parser
 
+import Data.Attoparsec.Text hiding (take)
 import Data.List
 import Data.List.Split hiding (split)
 import Data.Maybe
+import qualified Data.Text.IO as T
+
 import System.Directory
 import System.Environment
 import System.FilePath
@@ -43,8 +47,10 @@ main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
           let baseName = dropExtensions fileName
           let extension = takeExtensions fileName
 
-          fileData <- readFile file
-          let inp = inputsRead fileData
+          fileData <- T.readFile file
+          let inp = takeRight $ parseOnly parseMTLR fileData
+                where takeRight (Right a) = a
+                      takeRight _ = error "Could not parse file"
 
           gen <- getStdGen
 

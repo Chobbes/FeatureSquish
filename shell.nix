@@ -8,7 +8,7 @@ haskellPackages.cabal.mkDerivation (self: {
   src = ./.;
   isLibrary = false;
   isExecutable = true;
-  buildDepends = with haskellPackages; [ split random attoparsec ];
+  buildDepends = with haskellPackages; [ split random attoparsec text ];
   buildTools = with haskellPackages; [ cabalInstall ];
   meta = {
     description = "Time the speed of a serial connection with an Arduino.";
