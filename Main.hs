@@ -60,7 +60,7 @@ main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
           putStrLn "Writing files..."
           createDirectoryIfMissing True outDir
           mapM_ (writeRun outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
-          mapM_ (writeRunCSV outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
+          mapM_ (writeRunCSV csvDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
           putStrLn "Done!"
 
 -- | Convert an InputLine to a CSV representation.
