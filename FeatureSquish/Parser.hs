@@ -23,13 +23,18 @@
 
 {-# LANGUAGE OverloadedStrings #-}
 
-module FeatureSquish.Parser (parseMTLR) where
+module FeatureSquish.Parser (parsePSSP) where
 
 import FeatureSquish.InputLine
 
 import Control.Applicative
 import Data.Attoparsec.Text
+import Data.Maybe
 
+
+-- | Parse PSSP data, either in CSV or MTLR format.
+parsePSSP :: Parser [InputLine]
+parsePSSP = try parseMTLR <|> parseCSV
 
 -- | Parse a file of MTLR data.
 parseMTLR :: Parser [InputLine]
@@ -49,8 +54,28 @@ parseMTLR_Line = do time <- double
 parseMTLR_Feature :: Parser (Integer, Double)
 parseMTLR_Feature = do feature <- decimal
                        skipSpace
-                       string ":"
+                       char ':'
                        skipSpace
                        value <- double
                        skipSpace
                        return (feature, value)
+
+parseCSV :: Parser [InputLine]
+parseCSV = do takeTill (\c -> c == '\n')
+              endOfLine
+              many parseCSV_Line
+
+parseCSV_Line :: Parser InputLine
+parseCSV_Line = do event <- double
+                   char ','
+                   skipSpace
+                   censored <- decimal
+                   features <- many parseCSV_Feature
+                   endOfLine
+                   return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
+
+parseCSV_Feature :: Parser (Maybe Double)
+parseCSV_Feature = do skipSpace
+                      char ','
+                      skipSpace
+                      try (do value <- double; return (Just value)) <|> do takeTill (\c -> c == ',') ; return Nothing

@@ -48,7 +48,7 @@ main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
           let extension = takeExtensions fileName
 
           fileData <- T.readFile file
-          let inp = takeRight $ parseOnly parseMTLR fileData
+          let inp = takeRight $ parseOnly parsePSSP fileData
                 where takeRight (Right a) = a
                       takeRight _ = error "Could not parse file"
 
