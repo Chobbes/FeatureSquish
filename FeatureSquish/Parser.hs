@@ -75,4 +75,4 @@ parseCSV_Line = do event <- double
 
 parseCSV_Feature :: Parser (Maybe Double)
 parseCSV_Feature = do char ','
-                      try (do value <- double; return (Just value)) <|> do takeWhile1 (\c -> c /= ','); return Nothing
+                      do value <- double; return (Just value) <|> do takeWhile1 (\c -> c /= ','); return Nothing
