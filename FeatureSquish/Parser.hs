@@ -34,7 +34,7 @@ import Data.Maybe
 
 -- | Parse PSSP data, either in CSV or MTLR format.
 parsePSSP :: Parser [InputLine]
-parsePSSP = try parseCSV <|> parseMTLR
+parsePSSP = parseCSV <|> parseMTLR
 
 -- | Parse a file of MTLR data.
 parseMTLR :: Parser [InputLine]
