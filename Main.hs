@@ -74,10 +74,8 @@ inputLineToCSV :: [Integer] -> InputLine -> String
 inputLineToCSV featureList inp = intercalate ", " (t : c : featureStrings)
   where t = show $ time inp
         c = if censored inp then "1" else "0"
-        featureStrings = map (maybeShow . (flip lookup) (features inp)) featureList
-        maybeShow m = if isNothing m
-                         then ""
-                         else show (fromJust m)
+        featureStrings = map (maybeShow . flip lookup (features inp)) featureList
+        maybeShow m = maybe "" show m
 
 
 -- | Write all iterations for a given probability to a file
