@@ -21,6 +21,8 @@
    SOFTWARE.
 -}
 
+import FeatureSquish.InputLine
+
 import Data.List
 import Data.List.Split hiding (split)
 import Data.Maybe
@@ -29,17 +31,6 @@ import System.Environment
 import System.FilePath
 import System.Random
 
--- | Type for PSSP data from http://pssp.srv.ualberta.ca/.
-data InputLine = InputLine { time :: Double  -- ^ Time of event, or censoring.
-                           , censored :: Bool  -- ^ True if censored, False otherwise.
-                           , features :: [(Integer, Double)]  -- ^ (Feature, Value).
-                           }
-
-instance Show InputLine where
-  show inp = t ++ " " ++ c ++ " " ++ f
-       where t = show $ time inp
-             c = if censored inp then "1" else "0"
-             f = unwords . map (\(f,v) -> show f ++ ":" ++ show v) $ features inp
 
 -- | FeatureSquish dataset output_directory iterations prob_of_removal+
 main :: IO ()
@@ -62,21 +53,6 @@ main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
           mapM_ (writeRun outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
           mapM_ (writeRunCSV csvDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
           putStrLn "Done!"
-
--- | Convert an InputLine to a CSV representation.
-linesToCSV :: [InputLine] -> String
-linesToCSV inps = intercalate "\n" (header : inputsCSV)
-  where header = "Time, Censored, " ++ intercalate ", " (map show featureList)
-        inputsCSV = map (inputLineToCSV featureList) inps
-        featureList = nub $ concatMap (map fst . features) inps
-
--- | Convert an InputLine to CSV given a list of Integer features.
-inputLineToCSV :: [Integer] -> InputLine -> String
-inputLineToCSV featureList inp = intercalate ", " (t : c : featureStrings)
-  where t = show $ time inp
-        c = if censored inp then "1" else "0"
-        featureStrings = map (maybeShow . flip lookup (features inp)) featureList
-        maybeShow = maybe " " show
 
 -- | Write all iterations for a given probability to a file
 writeRun :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
