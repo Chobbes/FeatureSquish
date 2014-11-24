@@ -34,11 +34,13 @@ import Data.Maybe
 
 -- | Parse PSSP data, either in CSV or MTLR format.
 parsePSSP :: Parser [InputLine]
-parsePSSP = try parseMTLR <|> parseCSV
+parsePSSP = try parseCSV <|> parseMTLR
 
 -- | Parse a file of MTLR data.
 parseMTLR :: Parser [InputLine]
-parseMTLR = many parseMTLR_Line
+parseMTLR = do inps <- many parseMTLR_Line
+               endOfInput
+               return inps
 
 -- | Parse a single line of MTLR data.
 parseMTLR_Line :: Parser InputLine
@@ -52,30 +54,25 @@ parseMTLR_Line = do time <- double
 
 -- | Parse a single feature:value pair for MTLR.
 parseMTLR_Feature :: Parser (Integer, Double)
-parseMTLR_Feature = do feature <- decimal
-                       skipSpace
+parseMTLR_Feature = do skipSpace
+                       feature <- decimal
                        char ':'
-                       skipSpace
                        value <- double
-                       skipSpace
                        return (feature, value)
 
 parseCSV :: Parser [InputLine]
-parseCSV = do takeTill (\c -> c == '\n')
-              endOfLine
-              many parseCSV_Line
+parseCSV = do inps <- many parseCSV_Line
+              endOfInput
+              return inps
 
 parseCSV_Line :: Parser InputLine
 parseCSV_Line = do event <- double
                    char ','
-                   skipSpace
                    censored <- decimal
                    features <- many parseCSV_Feature
                    endOfLine
                    return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
 
 parseCSV_Feature :: Parser (Maybe Double)
-parseCSV_Feature = do skipSpace
-                      char ','
-                      skipSpace
-                      try (do value <- double; return (Just value)) <|> do takeTill (\c -> c == ',') ; return Nothing
+parseCSV_Feature = do char ','
+                      try (do value <- double; return (Just value)) <|> do takeWhile1 (\c -> c /= ','); return Nothing
