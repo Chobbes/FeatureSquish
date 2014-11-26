@@ -63,7 +63,6 @@ parseMTLRFeature = do skipSpace
 -- | Parse a CSV file of data.
 parseCSV :: Parser [InputLine]
 parseCSV = do inps <- many parseCSVLine
-              endOfLine
               endOfInput
               return inps
 
