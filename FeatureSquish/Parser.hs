@@ -30,7 +30,7 @@ import FeatureSquish.InputLine
 import Control.Applicative
 import Data.Attoparsec.Text
 import Data.Maybe
-
+import Prelude hiding (takeWhile)
 
 -- | Parse PSSP data, either in CSV or MTLR format.
 parsePSSP :: Parser [InputLine]
@@ -78,5 +78,6 @@ parseCSVLine = do event <- double
 
 -- | Parse a single feature from CSV data.
 parseCSVFeature :: Parser (Maybe Double)
-parseCSVFeature = do char ','
-                     (do value <- double; return (Just value)) <|> do takeWhile1 (/= ','); return Nothing
+parseCSVFeature =
+  do char ','
+     (do value <- double; return (Just value)) <|> do takeWhile (\c -> c /= ',' && c /= '\n'); return Nothing
