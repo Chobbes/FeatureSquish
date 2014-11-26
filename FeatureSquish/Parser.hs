@@ -63,6 +63,7 @@ parseMTLRFeature = do skipSpace
 -- | Parse a CSV file of data.
 parseCSV :: Parser [InputLine]
 parseCSV = do inps <- many parseCSVLine
+              endOfLine
               endOfInput
               return inps
 
@@ -78,4 +79,4 @@ parseCSVLine = do event <- double
 -- | Parse a single feature from CSV data.
 parseCSVFeature :: Parser (Maybe Double)
 parseCSVFeature = do char ','
-                     do value <- double; return (Just value) <|> do takeWhile1 (/= ','); return Nothing
+                     (do value <- double; return (Just value)) <|> do takeWhile1 (/= ','); return Nothing
