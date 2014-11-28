@@ -49,7 +49,7 @@ parseMTLRLine = do time <- double
                    censored <- decimal
                    skipSpace
                    features <- many parseMTLRFeature
-                   endOfLine
+                   endOfLine'
                    return (InputLine time (censored /= 0) features)
 
 -- | Parse a single feature:value pair for MTLR.
@@ -62,10 +62,10 @@ parseMTLRFeature = do skipSpace
 
 -- | Parse a CSV file of data.
 parseCSV :: Parser [InputLine]
-parseCSV = do header <- (do csv <- parseCSVLine; return [csv]) <|> takeWhile1 (/= '\n') *> return []
+parseCSV = do header <- (do csv <- parseCSVLine; return [csv]) <|> (skipToEndOfLine *> return [])
               inps <- many parseCSVLine
               endOfInput
-              return (header ++ inps)
+              return inps
 
 -- | Parse a single line of CSV data.
 parseCSVLine :: Parser InputLine
@@ -73,11 +73,19 @@ parseCSVLine = do event <- double
                   char ','
                   censored <- decimal
                   features <- many parseCSVFeature
-                  endOfLine <|> endOfInput
+                  endOfLine'
                   return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
 
 -- | Parse a single feature from CSV data.
 parseCSVFeature :: Parser (Maybe Double)
 parseCSVFeature =
   do char ','
-     (do value <- double; return (Just value)) <|> do takeWhile (\c -> c /= ',' && c /= '\n'); return Nothing
+     (do value <- double; return (Just value)) <|> (skipToEndOfLine *> return Nothing)
+
+-- | Newline parser to handle all sorts of horrible.
+endOfLine' :: Parser ()
+endOfLine' = endOfLine <|> endOfInput <|> (char '\r' *> return ())
+
+-- | Skip to the next line...
+skipToEndOfLine :: Parser ()
+skipToEndOfLine = takeWhile (\c -> c /= '\n' && c /= '\r') >> endOfLine'
