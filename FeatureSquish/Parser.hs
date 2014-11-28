@@ -73,7 +73,7 @@ parseCSVLine = do event <- double
                   char ','
                   censored <- decimal
                   features <- many parseCSVFeature
-                  endOfLine
+                  endOfLine <|> endOfInput
                   return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
 
 -- | Parse a single feature from CSV data.
