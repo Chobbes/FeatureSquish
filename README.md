@@ -33,7 +33,7 @@ in the test set, instead of the training set.
 
 For example
 
-    FeatureSquish example.train missing_data missing_data_csv 3 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+    FeatureSquish example.train 0.5 missing_data test_data missing_data_csv test_data_csv 3 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
 
 Will generate a directory with the following structure:
 
@@ -75,4 +75,4 @@ Will generate a directory with the following structure:
         ├── example_2.train
         └── example_3.train
 
-Where each sub directory contains several copies of example.train with features removed with the given probability. An identical directory will be generated for the CSV files.
+Where each sub directory contains several copies of example.train with features removed with the given probability. An identical directory will be generated for the CSV files, and test files.
