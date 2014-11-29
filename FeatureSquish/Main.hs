@@ -24,6 +24,8 @@
 import FeatureSquish.InputLine
 import FeatureSquish.Parser
 
+import Control.Arrow
+
 import Data.Attoparsec.Text hiding (take)
 import Data.List
 import Data.List.Split hiding (split)
@@ -38,10 +40,11 @@ import System.Random
 
 -- | FeatureSquish dataset output_directory iterations prob_of_removal+
 main :: IO ()
-main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
+main = do (file : testProbStr :outDir : testDir : csvDir : testCSVDir : iterStr : probStrs) <- getArgs
 
           let iterations = read iterStr
           let probs = map read probStrs
+          let testProb = read testProbStr
 
           let fileName = takeFileName file
           let baseName = dropExtensions fileName
@@ -56,20 +59,26 @@ main = do (file : outDir : csvDir : iterStr : probStrs) <- getArgs
 
           putStrLn "Writing files..."
           createDirectoryIfMissing True outDir
-          mapM_ (writeRun outDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
-          mapM_ (writeRunCSV csvDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp p g))) (zip probs (splits gen))
+          mapM_ (writeRun outDir testDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp testProb p g))) (zip probs (splits gen))
+          mapM_ (writeRunCSV csvDir testCSVDir baseName extension . (\(p,g) -> (p, squishMultiple iterations inp testProb p g))) (zip probs (splits gen))
           putStrLn "Done!"
 
 -- | Write all iterations for a given probability to a file
-writeRun :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
-writeRun outDir baseName extension (prob, inps) = 
-  mapM (writeIteration outDir baseName extension) (zip [1..] (zip (repeat prob) inps))
+writeRun :: FilePath -> FilePath -> String -> String -> (Double, [([InputLine], [InputLine])]) -> IO [()]
+writeRun outDir testDir baseName extension (prob, inps) = 
+  do mapM_ (writeIteration outDir baseName extension) (zip [1..] (zip (repeat prob) trainInputs))
+     mapM (writeIteration testDir baseName extension) (zip [1..] (zip (repeat prob) testInputs))
+  where trainInputs = map fst inps
+        testInputs = map snd inps
 
 -- | Write all iterations for a given probability to a CSV file
-writeRunCSV :: FilePath -> String -> String -> (Double, [[InputLine]]) -> IO [()]
-writeRunCSV outDir baseName extension (prob, inps) = 
-  mapM (writeIterationCSV outDir baseName extension) (zip [1..] (zip (repeat prob) inps))
-
+writeRunCSV :: FilePath -> FilePath -> String -> String -> (Double, [([InputLine], [InputLine])]) -> IO [()]
+writeRunCSV outDir testDir baseName extension (prob, inps) =
+  do mapM_ (writeIterationCSV outDir baseName extension) (zip [1..] (zip (repeat prob) trainInputs))
+     mapM (writeIterationCSV testDir baseName extension) (zip [1..] (zip (repeat prob) testInputs))
+  where trainInputs = map fst inps
+        testInputs = map snd inps
+        
 -- | Write a single iteration to a file.
 writeIteration :: FilePath -> String -> String -> (Integer, (Double, [InputLine])) -> IO ()
 writeIteration outDir baseName extension (iter, (prob, inp)) = 
@@ -87,12 +96,15 @@ writeIterationCSV outDir baseName extension (iter, (prob, inp)) =
         iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
                  
 -- | Generate several squished versions of the data.
-squishMultiple :: RandomGen g => Int -> [InputLine] -> Double -> g -> [[InputLine]]
-squishMultiple iterations inp prob gen = take iterations $ map (squishList inp prob) (splits gen)
+squishMultiple :: RandomGen g => Int -> [InputLine] -> Double -> Double -> g -> [([InputLine], [InputLine])]
+squishMultiple iterations inp testProb prob gen = take iterations $ map (squishList inp testProb prob) (splits gen)
 
 -- | Remove features with a given probability from an InputLine list.
-squishList :: RandomGen g => [InputLine] -> Double -> g -> [InputLine]
-squishList inp prob gen = zipWith (squish prob) (splits gen) inp
+squishList :: RandomGen g => [InputLine] -> Double -> Double -> g -> ([InputLine], [InputLine])
+squishList inp testProb prob gen = (map snd trainPart, map snd testPart)
+           where (splitGen, testGen) = split gen
+                 (trainPart, testPart) = partition (\(p,_) -> p <= prob) (zip (randomRs (0.0, 1.0) testGen) squished)
+                 squished = zipWith (squish prob) (splits splitGen) inp
 
 -- | Remove features with a given probability from an InputLine.
 squish :: RandomGen g => Double -> g -> InputLine -> InputLine
