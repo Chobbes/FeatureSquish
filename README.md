@@ -20,7 +20,7 @@ Usage
 
 Given a dataset you call the program as follows
 
-    FeatureSquish dataset output_directory output_directory_csv iterations prob_of_removal+
+    FeatureSquish dataset test_prob output_directory test_output_directory output_directory_csv test_output_directory_csv iterations prob_of_removal+
 
 Where `dataset` is the filename of the data, `prob_of_removal` is the
 probability that any feature will be removed from the dataset, and
@@ -28,7 +28,8 @@ probability that any feature will be removed from the dataset, and
 datasets with missing features to (`output_directory_csv` is where CSV
 files should go). `iterations` is the number of datasets to generate
 with each probability of removal. Multiple probabilities of removal
-may be specified.
+may be specified. `test_prob` is the probability of an item being put
+in the test set, instead of the training set.
 
 For example
 
