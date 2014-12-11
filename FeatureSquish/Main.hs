@@ -103,7 +103,7 @@ squishMultiple iterations inp testProb prob gen = take iterations $ map (squishL
 squishList :: RandomGen g => [InputLine] -> Double -> Double -> g -> ([InputLine], [InputLine])
 squishList inp testProb prob gen = (zipWith (squish prob) (splits splitGen) $ map snd trainPart, map snd testPart)
            where (splitGen, testGen) = split gen
-                 (trainPart, testPart) = partition (\(p,_) -> p <= prob) (zip (randomRs (0.0, 1.0) testGen) inp)
+                 (testPart, trainPart) = partition (\(p,_) -> p <= prob) (zip (randomRs (0.0, 1.0) testGen) inp)
 
 -- | Remove features with a given probability from an InputLine.
 squish :: RandomGen g => Double -> g -> InputLine -> InputLine
