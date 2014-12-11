@@ -28,6 +28,7 @@ module FeatureSquish.Parser (parsePSSP) where
 import FeatureSquish.InputLine
 
 import Control.Applicative
+import Control.Arrow
 import Data.Attoparsec.Text
 import Data.Maybe
 import Prelude hiding (takeWhile)
@@ -74,7 +75,7 @@ parseCSVLine = do event <- double
                   censored <- decimal
                   features <- many parseCSVFeature
                   endOfLine'
-                  return (InputLine event (censored /= 0) (zip [1..] $ catMaybes features))
+                  return (InputLine event (censored /= 0) (map (fst &&& fromJust . snd) $ filter (isJust . snd) (zip [1..] features)))
 
 -- | Parse a single feature from CSV data.
 parseCSVFeature :: Parser (Maybe Double)
