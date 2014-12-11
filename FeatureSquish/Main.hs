@@ -84,17 +84,17 @@ writeIteration :: FilePath -> String -> String -> (Integer, (Double, [InputLine]
 writeIteration outDir baseName extension (iter, (prob, inp)) = 
   do createDirectoryIfMissing True probDir
      writeFile iterFile (intercalate "\n" $ map show inp)
-  where probDir = joinPath [outDir, show prob]
-        iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
+  where probDir = joinPath [outDir, show prob, show iter]
+        iterFile = joinPath [probDir, baseName ++ extension]
 
 -- | Write a single iteration to a CSV file.
 writeIterationCSV :: FilePath -> String -> String -> (Integer, (Double, [InputLine])) -> IO ()
 writeIterationCSV outDir baseName extension (iter, (prob, inp)) = 
   do createDirectoryIfMissing True probDir
      writeFile iterFile (linesToCSV inp)
-  where probDir = joinPath [outDir, show prob]
-        iterFile = joinPath [probDir, baseName ++ "_" ++ show iter ++ extension]
-                 
+  where probDir = joinPath [outDir, show prob, show iter]
+        iterFile = joinPath [probDir, baseName ++ extension]
+
 -- | Generate several squished versions of the data.
 squishMultiple :: RandomGen g => Int -> [InputLine] -> Double -> Double -> g -> [([InputLine], [InputLine])]
 squishMultiple iterations inp testProb prob gen = take iterations $ map (squishList inp testProb prob) (splits gen)
